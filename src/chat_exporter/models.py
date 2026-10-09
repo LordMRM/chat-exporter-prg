@@ -15,6 +15,12 @@ class Role(Enum):
     USER = "user"            # the human
     ASSISTANT = "assistant"  # the AI
 
+class ChatLanguage(Enum):
+    """The language of a chat. This decides the text direction of the output."""
+
+    ENGLISH = "en"  # left-to-right
+    PERSIAN = "fa"  # right-to-left
+    MIXED = "mixed"  # both languages: each paragraph picks its own direction
 
 @dataclass
 class Message:

@@ -9,12 +9,16 @@ from pathlib import Path  # modern, cross-platform way to work with file paths
 from playwright.sync_api import sync_playwright  # lets Python control a browser
 
 from chat_exporter.exporters.html_builder import build_html  # our HTML page maker
-from chat_exporter.models import Chat  # our shared chat structure
+from chat_exporter.models import Chat, ChatLanguage  # our shared structures
 
 
-def export_pdf(chat: Chat, output_path: Path) -> Path:
+def export_pdf(
+    chat: Chat,
+    output_path: Path,
+    language: ChatLanguage = ChatLanguage.ENGLISH,
+) -> Path:
     """Write the chat to a PDF file and return the path of that file."""
-    html = build_html(chat)  # step 1: chat -> HTML text
+    html = build_html(chat, language)  # step 1: chat -> HTML text
 
     # "with" opens Playwright and guarantees it is shut down properly
     # at the end, even if an error happens in the middle.
