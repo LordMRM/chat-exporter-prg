@@ -1,0 +1,15 @@
+# Virtual environment (every user creates their own)
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Editor and OS clutter
+.vscode/
+.DS_Store
+
+# Build outputs (used later for packaging)
+build/
+dist/
+*.spec
