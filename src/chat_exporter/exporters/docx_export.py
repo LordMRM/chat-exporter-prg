@@ -8,7 +8,7 @@ Word does not detect text direction by itself, so for Persian we set
 right-to-left direction, right alignment and the complex-script font
 explicitly on every paragraph.
 """
-
+import unicodedata  # standard library: knows the direction of every character
 from pathlib import Path  # cross-platform file paths
 
 from docx import Document  # python-docx: creates and edits Word documents
@@ -21,6 +21,28 @@ from chat_exporter.models import Chat, ChatLanguage  # our shared structures
 
 FONT_NAME = "Vazirmatn"  # must be installed on the computer that opens the file
 
+def starts_rtl(text: str) -> bool:
+    """Return True if the first strongly-directional letter is right-to-left.
+
+    This is the same rule browsers use for dir="auto": spaces, digits and
+    punctuation have no direction, so we skip them until we meet a real letter.
+    """
+    for character in text:
+        kind = unicodedata.bidirectional(character)
+        if kind in ("R", "AL"):  # Hebrew / Arabic / Persian letters
+            return True
+        if kind == "L":          # Latin (and other left-to-right) letters
+            return False
+    return False  # no letters at all (e.g. only numbers): default to LTR
+
+
+def is_rtl(text: str, language: ChatLanguage) -> bool:
+    """Decide the direction of one paragraph for the chosen chat language."""
+    if language == ChatLanguage.PERSIAN:
+        return True               # always right-to-left
+    if language == ChatLanguage.MIXED:
+        return starts_rtl(text)   # decide paragraph by paragraph
+    return False                  # English: always left-to-right
 
 def set_run_font(run, rtl: bool) -> None:
     """Apply the font to a piece of text. For Persian also set the
@@ -70,21 +92,20 @@ def export_docx(
     """Write the chat to a .docx file and return the path of that file."""
     document = Document()  # a new, empty Word document
 
-    # For now only a fully Persian chat is right-to-left.
-    # (Mixed chats get per-paragraph detection in the next step.)
-    rtl = language == ChatLanguage.PERSIAN
-
-    # Chat title (plain paragraph, bold, so we control its font and direction).
-    add_text(document, chat.title, rtl, bold=True)
+    # Chat title: its direction follows its own text.
+    add_text(document, chat.title, is_rtl(chat.title, language), bold=True)
 
     for message in chat.messages:
-        # Label line: "You" or "AI" in bold.
-        add_text(document, role_label(message.role), rtl, bold=True)
+        # Label line: "You" or "AI" in bold. In mixed mode it is English,
+        # so it stays left-to-right; in Persian mode everything is RTL.
+        label = role_label(message.role)
+        add_text(document, label, is_rtl(label, language), bold=True)
 
         # One Word paragraph for every blank-line-separated block of text.
         for block in message.text.split("\n\n"):
             if block.strip():  # skip empty blocks
-                add_text(document, block.strip(), rtl)
+                text = block.strip()
+                add_text(document, text, is_rtl(text, language))
 
     document.save(str(output_path))  # write the file to disk
     return output_path
