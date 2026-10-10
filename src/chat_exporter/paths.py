@@ -8,7 +8,7 @@ way on Linux, Windows and macOS.
 import re  # regular expressions: pattern matching inside text
 from pathlib import Path  # cross-platform file paths
 
-from platformdirs import user_documents_dir  # finds the user's Documents folder
+from platformdirs import user_data_dir, user_documents_dir  # standard folders
 
 APP_FOLDER_NAME = "AI-Chat-Exports"  # name of our folder inside Documents
 MAX_NAME_LENGTH = 80  # long file names cause problems on some systems
@@ -69,3 +69,16 @@ def unique_path(folder: Path, stem: str, extension: str) -> Path:
 def build_output_path(title: str, extension: str) -> Path:
     """Return the full path for a new export, e.g. build_output_path("Hi", "pdf")."""
     return unique_path(get_output_dir(), safe_file_stem(title), extension)
+
+def get_profile_dir(browser_name: str) -> Path:
+    """Return the folder where our own browser profile (logins) is kept.
+
+    This is a separate profile used only by this program. It lives in the
+    operating system's standard per-user data folder, e.g.
+    ~/.local/share/chat-exporter-prg on Linux.
+    """
+    # appauthor=False stops Windows from adding an extra author folder.
+    base = Path(user_data_dir("chat-exporter-prg", appauthor=False))
+    folder = base / "browser-profiles" / browser_name
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
