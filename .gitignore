@@ -13,3 +13,6 @@ __pycache__/
 build/
 dist/
 *.spec
+
+# Dumps of web pages (may contain private chats)
+page_dump*.html
