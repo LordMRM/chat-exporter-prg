@@ -37,3 +37,13 @@ class Chat:
     title: str                   # the chat title shown on the website
     source: str                  # which AI service it came from, e.g. "claude"
     messages: list[Message] = field(default_factory=list)  # starts empty
+    
+TABLE_MARKER = "[[TABLE]]"  # first line of a text block that holds a table
+
+
+def parse_table(block: str) -> list[list[str]] | None:
+    """If the text block is a table, return its rows; otherwise None."""
+    if not block.startswith(TABLE_MARKER):
+        return None
+    lines = block.split("\n")[1:]  # drop the marker line
+    return [line.split("\t") for line in lines if line.strip()]

@@ -9,7 +9,7 @@ import base64  # turns binary files (fonts) into plain text
 from html import escape  # turns special characters like < and & into safe text
 from pathlib import Path  # cross-platform file paths
 
-from chat_exporter.models import Chat, ChatLanguage, Role  # shared structures
+from chat_exporter.models import Chat, ChatLanguage, Role, parse_table  # shared structures
 
 # Folder that contains the font files (…/chat_exporter/assets/fonts).
 # __file__ is the path of this python file; .parent.parent goes up two
@@ -64,11 +64,24 @@ def build_html(chat: Chat, language: ChatLanguage = ChatLanguage.ENGLISH) -> str
     for message in chat.messages:
         # A blank line separates paragraphs. We wrap each paragraph in its
         # own <p> tag so each one can have its own text direction.
-        paragraphs = [
-            f'<p dir="{direction}">{escape(paragraph)}</p>'
-            for paragraph in message.text.split("\n\n")
-            if paragraph.strip()  # skip paragraphs that are empty
-        ]
+        paragraphs = []
+        for paragraph in message.text.split("\n\n"):
+            if not paragraph.strip():
+                continue
+            rows = parse_table(paragraph)
+            if rows is None:
+                paragraphs.append(f'<p dir="{direction}">{escape(paragraph)}</p>')
+            else:
+                # First row is the header. Each cell picks its own direction.
+                html_rows = []
+                for number, cells in enumerate(rows):
+                    cell_tag = "th" if number == 0 else "td"
+                    html_cells = "".join(
+                        f'<{cell_tag} dir="{direction}">{escape(cell)}</{cell_tag}>'
+                        for cell in cells
+                    )
+                    html_rows.append(f"<tr>{html_cells}</tr>")
+                paragraphs.append(f"<table>{''.join(html_rows)}</table>")
 
         parts.append(
             f'<div class="message {message.role.value}">'
@@ -95,6 +108,9 @@ def build_html(chat: Chat, language: ChatLanguage = ChatLanguage.ENGLISH) -> str
   .assistant {{ background: #ececec; border-left-color: #5b6573; }}
   .label {{ font-weight: bold; margin-bottom: 0.25rem; }}
   p {{ margin: 0.5rem 0; white-space: pre-wrap; }}
+  table {{ border-collapse: collapse; width: 100%; margin: 0.5rem 0; background: #ffffff; }}
+  th, td {{ border: 1px solid #8a94a3; padding: 0.35rem 0.6rem; text-align: start; }}
+  th {{ background: #d3dcea; }}
 </style>
 </head>
 <body>

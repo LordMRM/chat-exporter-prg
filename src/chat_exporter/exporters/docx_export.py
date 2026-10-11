@@ -17,7 +17,7 @@ from docx.oxml import OxmlElement  # lets us create raw XML elements
 from docx.oxml.ns import qn  # builds proper XML names like "w:bidi"
 
 from chat_exporter.exporters.html_builder import role_label  # reuse "You" / "AI"
-from chat_exporter.models import Chat, ChatLanguage  # our shared structures
+from chat_exporter.models import Chat, ChatLanguage, parse_table  # our shared structures
 
 FONT_NAME = "Vazirmatn"  # must be installed on the computer that opens the file
 
@@ -83,6 +83,21 @@ def add_text(document, text: str, rtl: bool, bold: bool = False) -> None:
     run.bold = bold
     set_run_font(run, rtl)
 
+def add_table(document, rows: list[list[str]], language: ChatLanguage) -> None:
+    """Add a real Word table. The first row is the bold header."""
+    columns = max(len(row) for row in rows)
+    table = document.add_table(rows=len(rows), cols=columns)
+    table.style = "Table Grid"  # visible borders on every cell
+
+    for row_number, cells in enumerate(rows):
+        for column_number in range(columns):
+            text = cells[column_number] if column_number < len(cells) else ""
+            paragraph = table.cell(row_number, column_number).paragraphs[0]
+            rtl = is_rtl(text, language)
+            set_paragraph_direction(paragraph, rtl)
+            run = paragraph.add_run(text)
+            run.bold = row_number == 0
+            set_run_font(run, rtl)
 
 def export_docx(
     chat: Chat,
@@ -105,7 +120,11 @@ def export_docx(
         for block in message.text.split("\n\n"):
             if block.strip():  # skip empty blocks
                 text = block.strip()
-                add_text(document, text, is_rtl(text, language))
+                rows = parse_table(text)
+                if rows is None:
+                    add_text(document, text, is_rtl(text, language))
+                else:
+                    add_table(document, rows, language)
 
     document.save(str(output_path))  # write the file to disk
     return output_path

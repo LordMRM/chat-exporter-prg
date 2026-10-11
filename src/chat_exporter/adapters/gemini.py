@@ -61,10 +61,13 @@ COLLECT_JS = """
           const code = clean(child).textContent.replace(/\\s+$/, '');
           if (code) out.push(code);
         } else if (tag === 'table') {
+          // Marker line + one line per row, cells separated by a tab.
+          const lines = ['[[TABLE]]'];
           for (const row of child.querySelectorAll('tr')) {
             const cells = [...row.children].map((cell) => textOf(cell));
-            out.push(cells.join(' | '));
+            lines.push(cells.join('\\t'));
           }
+          out.push(lines.join('\\n'));
         } else {
           walk(child);  // a wrapper element: look inside it
         }
