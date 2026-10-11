@@ -10,15 +10,26 @@ script) calls run_export() and passes in two small helper functions:
 from pathlib import Path  # cross-platform file paths
 from typing import Callable  # type hint for "a function passed as an argument"
 
-from chat_exporter.adapters.claude import read_chat
+from chat_exporter.adapters import chatgpt, claude, gemini
 from chat_exporter.browsers.chromium import BrowserSession
 from chat_exporter.exporters.docx_export import export_docx
 from chat_exporter.exporters.pdf import export_pdf
 from chat_exporter.paths import build_output_path
 from chat_exporter.settings import BrowserChoice, OutputFormat, Service, Settings
 
-# Start page of every supported service. Gemini and ChatGPT come later.
-SERVICE_URLS = {Service.CLAUDE: "https://claude.ai"}
+# Start page of every supported service.
+SERVICE_URLS = {
+    Service.CLAUDE: "https://claude.ai",
+    Service.GEMINI: "https://gemini.google.com",
+    Service.CHATGPT: "https://chatgpt.com",
+}
+
+# The function that reads a chat for each service.
+READERS = {
+    Service.CLAUDE: claude.read_chat,
+    Service.GEMINI: gemini.read_chat,
+    Service.CHATGPT: chatgpt.read_chat,
+}
 
 
 def run_export(
@@ -42,7 +53,7 @@ def run_export(
         wait_for_user()
 
         progress("Reading the chat (this can take a while for long chats)...")
-        chat = read_chat(page)
+        chat = READERS[settings.service](page)
 
     progress(f"Found {len(chat.messages)} messages. Creating the file...")
     extension = settings.output_format.value  # "pdf" or "docx"

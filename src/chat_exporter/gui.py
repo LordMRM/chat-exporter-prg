@@ -62,8 +62,10 @@ class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()  # create the actual window first
         self.title("Chat Exporter")
-        self.geometry("520x640")
-        self.resizable(False, False)
+        # No fixed height: the window grows to fit all its content
+        # (including the hint text and the buttons that appear later).
+        self.minsize(520, 640)
+        self.resizable(True, True)
 
         self.configure(bg=BACKGROUND)  # color of the window itself
         self._apply_theme()
@@ -86,6 +88,7 @@ class App(tk.Tk):
 
         self._build_widgets()
         self._update_browser_hint()
+        self._fit_window()
 
     # ---------- building the layout ----------
 
@@ -198,6 +201,7 @@ class App(tk.Tk):
     def _update_browser_hint(self) -> None:
         """Show the explanation that matches the selected browser."""
         self.hint_var.set(BROWSER_HINTS[BrowserChoice(self.browser_var.get())])
+        self._fit_window()
 
     def get_settings(self) -> Settings:
         """Turn the current widget values into a Settings object."""
@@ -265,13 +269,25 @@ class App(tk.Tk):
             elif kind == "error":
                 self.status_var.set(f"Error: {value}")
                 finished = True
-
+        self._fit_window()
         if finished:
             self.is_running = False
             self.export_button.state(["!disabled"])
             self.continue_button.pack_forget()
         else:
             self.after(100, self._poll_messages)  # check again soon
+
+    def _fit_window(self) -> None:
+        """Resize the window so that every widget is fully visible."""
+        self.update_idletasks()  # let Tkinter finish calculating widget sizes
+        needed_height = self.winfo_reqheight()
+        needed_width = max(self.winfo_reqwidth(), 520)
+        # Never make the window smaller than it currently is, so it does
+        # not jump around while the user is working.
+        self.geometry(
+            f"{max(needed_width, self.winfo_width())}x"
+            f"{max(needed_height, self.winfo_height())}"
+        )
 
 def run_gui() -> None:
     """Create the window and keep it open until the user closes it."""
