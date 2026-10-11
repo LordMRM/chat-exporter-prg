@@ -89,9 +89,10 @@ def build_html(chat: Chat, language: ChatLanguage = ChatLanguage.ENGLISH) -> str
     {fonts_css}
   body {{ font-family: 'Vazirmatn', sans-serif; max-width: 800px; margin: 2rem auto; }}
   h1 {{ font-size: 1.5rem; }}
-  .message {{ margin: 1rem 0; padding: 0.75rem 1rem; border-radius: 8px; }}
-  .user {{ background: #eef3fb; }}
-  .assistant {{ background: #f5f5f5; }}
+  .message {{ margin: 1rem 0; padding: 0.75rem 1rem; border-radius: 8px;
+             border: 1px solid #c9d1dc; border-left-width: 6px; }}
+  .user {{ background: #dbe8fb; border-left-color: #2f6fdd; }}
+  .assistant {{ background: #ececec; border-left-color: #5b6573; }}
   .label {{ font-weight: bold; margin-bottom: 0.25rem; }}
   p {{ margin: 0.5rem 0; white-space: pre-wrap; }}
 </style>
