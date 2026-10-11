@@ -161,18 +161,31 @@ def find_gaps(seen: set) -> list[int]:
         return []
     return [i for i in range(min(seen), max(seen) + 1) if i not in seen]
 
+def build_chat(title: str, found: dict) -> Chat:
+    """Turn the collected rows into a Chat, in the original order."""
+    messages = []
+    for index in sorted(found):  # restore the original order
+        row = found[index]
+        role = Role.USER if row["role"] == "human" else Role.ASSISTANT
+        messages.append(Message(role, row["text"]))
+    return Chat(title=title, source="claude", messages=messages)
 
 def read_chat(page: Page) -> Chat:
     """Scroll through the open chat and return all of its messages."""
     title = page.title().removesuffix(" - Claude").strip() or "Claude chat"
 
     page.wait_for_selector(ROW_SELECTOR, timeout=15000)
-    if not page.evaluate(MARK_SCROLLER_JS):
-        raise RuntimeError("Could not find the scrolling area of the chat.")
-
-    scroller = page.locator(SCROLLER)
     found: dict[int, dict] = {}
     seen: set[int] = set()
+
+    if not page.evaluate(MARK_SCROLLER_JS):
+        # The chat fits on one screen, so there is nothing to scroll.
+        print("Short chat (nothing to scroll): reading what is on screen.")
+        time.sleep(1.0)  # let the rows finish rendering
+        collect_visible_rows(page, found, seen)
+        return build_chat(title, found)
+
+    scroller = page.locator(SCROLLER)
 
     for attempt in range(1, MAX_PASSES + 1):
         print(f"Pass {attempt}: going to the top...")
@@ -193,10 +206,4 @@ def read_chat(page: Page) -> Chat:
         if gaps:
             print("  missing row numbers (first 30):", gaps[:30])
 
-    messages = []
-    for index in sorted(found):  # restore the original order
-        row = found[index]
-        role = Role.USER if row["role"] == "human" else Role.ASSISTANT
-        messages.append(Message(role, row["text"]))
-
-    return Chat(title=title, source="claude", messages=messages)
+    return build_chat(title, found)

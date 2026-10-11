@@ -13,6 +13,15 @@ from playwright.sync_api import Page
 
 from chat_exporter.models import Chat, Message, Role
 
+import time  # short pauses so the page can load older messages
+
+SCROLLER = 'infinite-scroller[data-test-id="chat-history-container"]'
+USER_SELECTOR = "user-query-content"  # one per real user message (not nested)
+
+PAUSE_SECONDS = 1.2     # wait after each jump for older messages to load
+STABLE_ROUNDS = 4       # how many unchanged rounds mean "top reached"
+MAX_TOP_ATTEMPTS = 200  # safety limit so we can never loop forever
+
 TURN_SELECTOR = "user-query, model-response"
 
 # JavaScript that runs inside the page and returns plain data.
@@ -94,12 +103,44 @@ COLLECT_JS = """
 """
 
 
+def load_whole_chat(page: Page) -> None:
+    """Scroll to the top again and again until no older messages appear."""
+    scroller = page.locator(SCROLLER)
+    scroller.wait_for(timeout=15000)
+
+    stable = 0
+    last_signature = None
+    for attempt in range(MAX_TOP_ATTEMPTS):
+        scroller.evaluate("el => { el.scrollTop = 0; }")
+        time.sleep(PAUSE_SECONDS)
+
+        # Signature = (total height, number of user messages in the page).
+        signature = (
+            scroller.evaluate("el => el.scrollHeight"),
+            page.locator(USER_SELECTOR).count(),
+        )
+        if attempt % 5 == 0:
+            print(f"  loading older messages... height {signature[0]}, "
+                  f"user messages in page: {signature[1]}")
+
+        if signature == last_signature:
+            stable += 1
+        else:
+            stable = 0
+        last_signature = signature
+
+        if stable >= STABLE_ROUNDS:
+            return
+    print("Warning: could not confirm that we reached the top of the chat.")
+
+
 def read_chat(page: Page) -> Chat:
     """Read the Gemini chat that is currently open in the given page."""
     page.wait_for_selector(TURN_SELECTOR, timeout=15000)
 
-    # Tab titles look like "Chat title - Google Gemini" (we will check
-    # the real format in the test). Fall back to a generic name.
+    print("Loading the whole chat (scrolling to the top)...")
+    load_whole_chat(page)
+
     title = page.title()
     for suffix in (" - Google Gemini", " | Gemini", "Google Gemini"):
         title = title.removesuffix(suffix)

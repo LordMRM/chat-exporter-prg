@@ -11,7 +11,7 @@ from chat_exporter.browsers.chromium import BrowserSession  # noqa: E402
 # ancestor that can scroll vertically.
 JS = """
 () => {
-  const row = document.querySelector('[data-testid="transcript-row"]');
+  const row = document.querySelector('user-query');
   const found = [];
   let node = row;
   while (node) {
@@ -36,7 +36,7 @@ JS = """
 
 def main() -> None:
     with BrowserSession("chrome") as page:
-        page.goto("https://claude.ai")
+        page.goto("https://gemini.google.com")
         input("Open the LONG chat, wait until it loads, then press Enter... ")
         for item in page.evaluate(JS):
             print(item)
