@@ -4,7 +4,9 @@ Everything is saved in one fixed folder: <Documents>/AI-Chat-Exports.
 The Documents folder is found with platformdirs, so it works the same
 way on Linux, Windows and macOS.
 """
-
+import os  # os.startfile exists only on Windows
+import subprocess  # starts other programs
+import sys  # sys.platform tells us which operating system we are on
 import re  # regular expressions: pattern matching inside text
 from pathlib import Path  # cross-platform file paths
 
@@ -82,3 +84,12 @@ def get_profile_dir(browser_name: str) -> Path:
     folder = base / "browser-profiles" / browser_name
     folder.mkdir(parents=True, exist_ok=True)
     return folder
+
+def open_folder(folder: Path) -> None:
+    """Show a folder in the system's file manager (works on all 3 systems)."""
+    if sys.platform.startswith("win"):
+        os.startfile(folder)  # Windows Explorer
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", str(folder)])  # macOS Finder
+    else:
+        subprocess.Popen(["xdg-open", str(folder)])  # Linux file manager

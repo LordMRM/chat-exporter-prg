@@ -8,6 +8,7 @@ import threading  # runs the export in the background
 from pathlib import Path
 import tkinter as tk  # the window toolkit that ships with Python
 from tkinter import ttk  # "themed" widgets: nicer-looking buttons, menus...
+from chat_exporter.paths import APP_FOLDER_NAME, get_output_dir, open_folder
 
 from chat_exporter.models import ChatLanguage
 from chat_exporter.paths import APP_FOLDER_NAME
@@ -170,6 +171,12 @@ class App(tk.Tk):
             command=self._on_continue_clicked,
         )
 
+        # Shown only after a successful export.
+        self.open_button = ttk.Button(
+            frame, text="Open the folder",
+            command=lambda: open_folder(get_output_dir()),
+        )
+
         ttk.Label(
             frame, textvariable=self.status_var, wraplength=470, justify="left"
         ).pack(anchor="w", pady=(12, 0))
@@ -208,6 +215,7 @@ class App(tk.Tk):
         self.is_running = True
         self.export_button.state(["disabled"])
         self.continue_event.clear()
+        self.open_button.pack_forget()
 
         settings = self.get_settings()
         worker = threading.Thread(
@@ -252,6 +260,7 @@ class App(tk.Tk):
                 self.continue_button.pack(fill="x", ipady=6, pady=(8, 0))
             elif kind == "done":
                 self.status_var.set(f"Done! Saved to:\n{value}")
+                self.open_button.pack(fill="x", ipady=6, pady=(8, 0))
                 finished = True
             elif kind == "error":
                 self.status_var.set(f"Error: {value}")
