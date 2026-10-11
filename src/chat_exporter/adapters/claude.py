@@ -13,7 +13,7 @@ from playwright.sync_api import Page
 from chat_exporter.models import Chat, Message, Role
 
 ROW_SELECTOR = '[data-testid="transcript-row"]'
-TEXT_SELECTOR = "p, li, pre, h1, h2, h3, h4, h5, h6"
+TEXT_SELECTOR = "p, li, pre, h1, h2, h3, h4, h5, h6, table"
 
 SCROLL_FRACTION = 0.8   # scroll 80% of the visible height per step
 PAUSE_SECONDS = 0.4     # wait after each scroll for rows to load
@@ -68,6 +68,23 @@ COLLECT_JS = """
     for (const message of messages) {
       for (const el of message.querySelectorAll(selectors.text)) {
         if ((el.className || '').toString().includes('sr-only')) continue;
+
+        if (el.tagName === 'TABLE') {
+          // Marker line + one line per row, cells separated by a tab.
+          const lines = ['[[TABLE]]'];
+          for (const tr of el.querySelectorAll('tr')) {
+            const cells = [...tr.children].map(
+              (cell) => cell.innerText.replace(/\\s+/g, ' ').trim()
+            );
+            lines.push(cells.join('\\t'));
+          }
+          blocks.push(lines.join('\\n'));
+          continue;
+        }
+
+        // Skip text that lives inside a table (it is handled above).
+        if (el.closest('table')) continue;
+
         const text = el.innerText.trim();
         if (text) blocks.push(text);
       }
