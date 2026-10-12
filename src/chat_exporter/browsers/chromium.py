@@ -104,9 +104,13 @@ class BrowserSession:
         """Runs at the start of a "with" block. Returns an open page."""
         executable = find_executable(self.browser_name)
         if executable is None:
-            raise RuntimeError(
-                f"Could not find {self.browser_name} on this computer."
-            )
+            message = f"Could not find {self.browser_name} on this computer."
+            if sys.platform.startswith("linux"):
+                message += (
+                    " On Linux, please install Google Chrome or Chromium"
+                    " and choose Chrome in the program."
+                )
+            raise RuntimeError(message)
 
         port = find_free_port()
         profile = get_profile_dir(self.browser_name)
