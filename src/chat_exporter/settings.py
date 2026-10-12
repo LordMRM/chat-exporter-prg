@@ -31,7 +31,7 @@ class OutputFormat(Enum):
 
     PDF = "pdf"
     DOCX = "docx"
-
+    BOTH = "both"  # create a PDF and a Word file from one reading of the chat  
 
 @dataclass
 class Settings:

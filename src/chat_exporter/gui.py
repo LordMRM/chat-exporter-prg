@@ -149,7 +149,11 @@ class App(tk.Tk):
 
         self._radio_group(
             frame, "3. File type", self.format_var,
-            [("PDF", OutputFormat.PDF.value), ("Word (DOCX)", OutputFormat.DOCX.value)],
+            [
+                ("PDF", OutputFormat.PDF.value),
+                ("Word (DOCX)", OutputFormat.DOCX.value),
+                ("Both", OutputFormat.BOTH.value),
+            ],
         )
 
         self._radio_group(
@@ -244,8 +248,8 @@ class App(tk.Tk):
             self.continue_event.wait()  # sleep until the button is clicked
 
         try:
-            path = run_export(settings, progress, wait_for_user)
-            self.messages.put(("done", str(path)))
+            paths = run_export(settings, progress, wait_for_user)
+            self.messages.put(("done", "\n".join(str(p) for p in paths)))
         except Exception as error:  # show any problem to the user
             self.messages.put(("error", str(error) or type(error).__name__))
 

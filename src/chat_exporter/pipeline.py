@@ -36,8 +36,8 @@ def run_export(
     settings: Settings,
     progress: Callable[[str], None],
     wait_for_user: Callable[[], None],
-) -> Path:
-    """Run the export and return the path of the created file."""
+) -> list[Path]:
+    """Run the export and return the paths of the created files."""
     # Fail early, with a clear message, for things we have not built yet.
     if settings.service not in SERVICE_URLS:
         raise NotImplementedError(f"{settings.service.name.title()} is not supported yet.")
@@ -55,14 +55,28 @@ def run_export(
         progress("Reading the chat (this can take a while for long chats)...")
         chat = READERS[settings.service](page)
 
-    progress(f"Found {len(chat.messages)} messages. Creating the file...")
-    extension = settings.output_format.value  # "pdf" or "docx"
-    output_path = build_output_path(chat.title, extension)
+    progress(f"Found {len(chat.messages)} messages. Creating the file(s)...")
 
-    if settings.output_format == OutputFormat.PDF:
-        export_pdf(chat, output_path, settings.language)
-    else:
-        export_docx(chat, output_path, settings.language)
+    # Which file types to create from this one chat.
+    wanted = (
+        [OutputFormat.PDF, OutputFormat.DOCX]
+        if settings.output_format == OutputFormat.BOTH
+        else [settings.output_format]
+    )
+
+    created: list[Path] = []
+    for output_format in wanted:
+        extension = output_format.value  # "pdf" or "docx"
+        output_path = build_output_path(chat.title, extension)
+        if output_format == OutputFormat.PDF:
+            export_pdf(chat, output_path, settings.language)
+        else:
+            export_docx(chat, output_path, settings.language)
+        created.append(output_path)
+
+    names = ", ".join(path.name for path in created)
+    progress(f"Done: {names}")
+    return created
 
     progress(f"Done: {output_path}")
     return output_path
