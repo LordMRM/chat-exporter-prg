@@ -14,7 +14,7 @@ from playwright.sync_api import Page
 
 from chat_exporter.models import Chat, Message, Role
 
-MESSAGE_SELECTOR = "[data-message-author-role]"
+MESSAGE_SELECTOR = "[data-message-author-role], [data-content-search-unit-key]"
 
 SCROLL_FRACTION = 0.7   # scroll 70% of the visible height per step
 PAUSE_SECONDS = 0.5     # wait after each scroll for rows to load
@@ -27,7 +27,9 @@ TOP_PAUSE_SECONDS = 1.0 # wait after each jump to the top
 # and marks it so later calls can find it again.
 MARK_SCROLLER_JS = """
 () => {
-  let node = document.querySelector('[data-message-author-role]');
+    let node = document.querySelector(
+    '[data-message-author-role], [data-content-search-unit-key]'
+  );
   while (node) {
     const overflow = getComputedStyle(node).overflowY;
     if (/(auto|scroll)/.test(overflow) && node.scrollHeight > node.clientHeight) {
@@ -88,7 +90,9 @@ COLLECT_JS = """
     return out;
   };
 
-  const turns = [];
+   const turns = [];
+
+  // Old interface: data-message-author-role + conversation-turn-N.
   for (const el of document.querySelectorAll('[data-message-author-role]')) {
     const container = el.closest('[data-testid^="conversation-turn-"]');
     const match = container
@@ -97,19 +101,38 @@ COLLECT_JS = """
     const role = el.getAttribute('data-message-author-role');
     let text;
     if (role === 'user') {
-      // User messages are plain text. Keep their line breaks, and turn
-      // blank lines into paragraph breaks like everywhere else.
-      text = el.innerText.replace(/\\r/g, '').trim();
-      text = text.replace(/\\n{2,}/g, '\\n\\n');
+      text = el.innerText.replace(/\\r/g, '').trim().replace(/\\n{2,}/g, '\\n\\n');
     } else {
       text = blocksOf(el).join('\\n\\n');
     }
     turns.push({
       turn: match ? parseInt(match[1], 10) : -1,
       id: el.getAttribute('data-message-id'),
-      role,
-      text,
+      role, text,
     });
+  }
+
+  // New interface: key looks like "fallback-turn-N:M:user|assistant".
+  if (turns.length === 0) {
+    for (const el of document.querySelectorAll('[data-content-search-unit-key]')) {
+      const key = el.getAttribute('data-content-search-unit-key');
+      const match = key.match(/turn-(\\d+):(\\d+):(user|assistant)$/);
+      if (!match) continue;
+      const role = match[3];
+      let text;
+      if (role === 'user') {
+        text = el.innerText.replace(/\\r/g, '').trim().replace(/\\n{2,}/g, '\\n\\n');
+      } else {
+        const root = el.querySelector('[data-markdown-text-style]') || el;
+        text = blocksOf(root).join('\\n\\n');
+      }
+      turns.push({
+        // turn number * 2 + (0 for user, 1 for assistant) keeps the order.
+        turn: parseInt(match[1], 10) * 2 + (role === 'assistant' ? 1 : 0),
+        id: key,
+        role, text,
+      });
+    }
   }
   return turns;
 }
@@ -199,7 +222,14 @@ def build_chat(title: str, found: dict) -> Chat:
 
 def read_chat(page: Page) -> Chat:
     """Scroll through the open chat and return all of its messages."""
-    page.wait_for_selector(MESSAGE_SELECTOR, timeout=15000)
+    try:
+        page.wait_for_selector(MESSAGE_SELECTOR, timeout=15000, state="attached")
+    except Exception as error:
+        raise RuntimeError(
+            "No chat messages were found on this page. Make sure you are "
+            "logged in and a chat is open. If it is, ChatGPT may have "
+            "changed its layout."
+        ) from error
     title = page.title().removesuffix(" - ChatGPT").strip() or "ChatGPT chat"
 
     found: dict[str, dict] = {}
