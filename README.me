@@ -1,6 +1,144 @@
 # chat-exporter-prg
 
-Export your AI chats (ChatGPT, Claude, Gemini) to clean PDF or DOCX files.
-Everything runs locally on your computer. No data is collected or sent anywhere.
+Export your AI chats (**ChatGPT**, **Claude**, **Gemini**) to clean **PDF** or **Word (DOCX)** files, including very long chats, code blocks, tables, and Persian / English / mixed text.
 
-Status: under development.
+> **Privacy:** everything runs locally on your computer. This program has no server, collects no data, and sends nothing anywhere. It only reads the chat that is open in a browser window on your own machine.
+
+> **Disclaimer:** this is an unofficial tool, not affiliated with OpenAI, Anthropic or Google. Use it for your own chats and follow the terms of each service. Websites change their layout from time to time, so a service may stop working until the program is updated.
+
+## Features
+
+- Services: ChatGPT, Claude, Gemini
+- Output: PDF, Word (DOCX), or both from a single reading of the chat
+- Long chats: the program scrolls through the whole chat automatically
+- Code blocks and real tables are kept
+- Languages: English, Persian (right-to-left), or mixed (each paragraph gets its own direction)
+- Embedded Vazirmatn font, so PDFs look the same on every computer
+- Files are always saved in `Documents/AI-Chat-Exports`
+
+## Requirements
+
+| System | Browser needed |
+|---|---|
+| Windows | Google Chrome or Microsoft Edge |
+| macOS | Google Chrome or Microsoft Edge (**not tested yet**) |
+| Linux | Google Chrome or Chromium (Edge is not supported on Linux) |
+
+Firefox and Safari are not supported yet. PDF export needs Chrome or Edge even if you only want to read the chat from another browser.
+
+## Quick start (Windows)
+
+1. Download `chat-exporter-prg.exe` from the [Releases](https://github.com/LordMRM/chat-exporter-prg/releases) page.
+2. Double-click it. Windows may show a "Windows protected your PC" warning because the program is not code-signed. Click **More info**, then **Run anyway**.
+3. Follow the steps in [How to use](#how-to-use).
+
+## Run from source (Windows, macOS, Linux)
+
+You need Python 3.11 or newer (on Linux also the Tkinter package, e.g. `python3-tkinter` on Fedora or `python3-tk` on Debian/Ubuntu).
+
+```bash
+git clone https://github.com/LordMRM/chat-exporter-prg.git
+cd chat-exporter-prg
+python -m venv .venv
+```
+
+Activate the environment:
+
+- Windows (PowerShell): `.\.venv\Scripts\Activate.ps1`
+  (if scripts are blocked, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` first)
+- Windows (cmd): `.venv\Scripts\activate.bat`
+- macOS / Linux: `source .venv/bin/activate`
+
+Then install and run:
+
+```bash
+pip install -r requirements.txt
+```
+
+- Windows PowerShell: `$env:PYTHONPATH = "src"` then `python -m chat_exporter.main`
+- Windows cmd: `set PYTHONPATH=src` then `python -m chat_exporter.main`
+- macOS / Linux: `PYTHONPATH=src python -m chat_exporter.main`
+
+## How to use
+
+1. Choose the **AI service**, **browser**, **file type** and the **language of the chat**.
+2. Click **Export chat**. A separate browser window opens. It is used only by this program and has its own profile.
+3. **Log in** to your AI service in that window (only the first time, it is remembered afterwards).
+4. **Open the chat** you want to export.
+5. Go back to the program and click **Continue**.
+6. Wait. Long chats can take a few minutes while the program scrolls through them. Do not close the browser window.
+7. When it says *Done*, click **Open the folder** to see your files.
+
+Your browser's own windows, bookmarks and passwords are never touched. Logins live only in the program's separate profile, on your computer.
+
+## Login tips
+
+- **"Sign in with Google" shows a blank page** (seen on Claude): Google sometimes blocks sign-in inside automated browser windows. Type your Gmail address manually in the email field instead; the service will send you a code by email, enter it and you are in.
+- **ChatGPT** may ask you to confirm the login from your phone app. That is fine.
+- If you see a "Verify you are human" page, solve it once and continue.
+- Make sure a chat is actually open (the address should look like `chatgpt.com/c/...`) before you click **Continue**.
+
+## Where are my files?
+
+`Documents/AI-Chat-Exports` (the folder is created automatically). If a file with the same name already exists, the new one gets `(2)`, `(3)`, and so on, so nothing is overwritten.
+
+## Saved logins and how to remove them
+
+The program's browser profile is stored here:
+
+| System | Folder |
+|---|---|
+| Windows | `%LOCALAPPDATA%\chat-exporter-prg` |
+| macOS | `~/Library/Application Support/chat-exporter-prg` |
+| Linux | `~/.local/share/chat-exporter-prg` |
+
+Delete that folder to forget all logins made through this program.
+
+## Persian text and Word files
+
+- PDF files embed the Vazirmatn font, so they always look right.
+- Word files can only use fonts installed on the computer. To see Persian text in Vazirmatn, install the font files from `src/chat_exporter/assets/fonts` (right-click, *Install*). Without it, Word shows a fallback font; direction and alignment stay correct.
+- The Persian option in the program window is labelled "Persian" on purpose: Tkinter can draw Persian letters reversed on some systems. A Persian interface is planned.
+
+## Troubleshooting
+
+| Problem | What to do |
+|---|---|
+| "Could not find chrome/edge on this computer" | Install Google Chrome (or Edge on Windows/macOS). On Linux, install Chrome or Chromium and choose Chrome in the program. |
+| "No chat messages were found on this page" | Make sure you are logged in and a chat is open, then click Continue. If so, the service may have changed its layout: please open an issue. |
+| The chat is incomplete | Do not scroll or click inside the browser window while it works, and try again. Report it with the service name if it keeps happening. |
+| A browser process stays open after an error | Close the browser window manually. |
+
+## Build the program yourself
+
+Install PyInstaller (`pip install pyinstaller`) in the virtual environment, then:
+
+- Windows: `.\scripts\build_windows.ps1` creates `dist\chat-exporter-prg.exe`
+- macOS and Linux: build scripts will be added after testing on those systems
+
+## Project layout
+
+```
+src/chat_exporter/
+├── adapters/    one reader per AI website
+├── browsers/    starts Chrome/Edge and connects to it
+├── exporters/   PDF and DOCX writers
+├── assets/      Vazirmatn font
+├── gui.py       the window (Tkinter)
+├── pipeline.py  the whole export job
+├── paths.py     output folder and profile folder
+└── models.py    shared chat data structures
+```
+
+Each website has its own adapter, so when a site changes, only that one file needs fixing.
+
+## Roadmap
+
+- macOS testing and packaging
+- Firefox support
+- Persian user interface
+- App icon
+
+## License
+
+MIT, see [LICENSE](LICENSE). The bundled Vazirmatn font is under the SIL Open Font License (see `src/chat_exporter/assets/fonts/OFL.txt`).
