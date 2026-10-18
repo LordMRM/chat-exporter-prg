@@ -32,10 +32,18 @@ Firefox and Safari are not supported yet. PDF export needs Chrome or Edge even i
 
 Download the file for your system from the [Releases](https://github.com/LordMRM/chat-exporter-prg/releases) page, then follow the steps in [How to use](#how-to-use).
 
-**Windows** (`chat-exporter-prg.exe`)
+### Windows
 
-1. Double-click the file.
-2. Windows may show "Windows protected your PC" because the program is not code-signed. Click **More info**, then **Run anyway**.
+A ready-made program is available on the [Releases](https://github.com/LordMRM/chat-exporter-prg/releases) page.
+
+1. Download `chat-exporter-prg-windows.exe`.
+2. Double-click it to run. No installation is needed.
+3. If Windows shows a blue **"Windows protected your PC"** window, click **More info**, then click **Run anyway**.
+
+**Why does this warning appear?**
+The program is not signed with a paid code-signing certificate, so Windows SmartScreen does not recognise it yet. The source code is fully open on GitHub, and the program never sends your chats anywhere.
+
+Some antivirus programs may also flag programs built with PyInstaller by mistake. If you prefer, you can run the program from source instead (see below).
 
 ### macOS (Apple Silicon only)
 
