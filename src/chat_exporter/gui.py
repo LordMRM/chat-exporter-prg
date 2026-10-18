@@ -3,6 +3,8 @@
 Part 1: layout and choices only. The Export button is connected to the
 real export job in the next step.
 """
+
+from chat_exporter import __version__
 import ctypes  # lets us call a Windows system function
 import queue  # a thread-safe mailbox between the worker and the window
 import sys  # tells us which operating system we run on
@@ -82,7 +84,7 @@ class App(tk.Tk):
 
     def __init__(self) -> None:
         super().__init__()  # create the actual window first
-        self.title("Chat Exporter")
+        self.title(f"Chat Exporter v{__version__}")
         # No fixed height: the window grows to fit all its content
         # (including the hint text and the buttons that appear later).
         self._set_window_icon()
