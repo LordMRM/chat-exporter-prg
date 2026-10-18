@@ -37,11 +37,29 @@ Download the file for your system from the [Releases](https://github.com/LordMRM
 1. Double-click the file.
 2. Windows may show "Windows protected your PC" because the program is not code-signed. Click **More info**, then **Run anyway**.
 
-**macOS** (`chat-exporter-prg-mac.zip`, Apple Silicon only: M1, M2, M3, M4...)
+### macOS (Apple Silicon only)
 
-1. Unzip the file and move `chat-exporter-prg.app` wherever you like (for example the Applications folder).
-2. The first time, macOS may say the app cannot be opened because the developer cannot be verified (the program is not signed by Apple). **Right-click the app, choose Open, then click Open again.** After that it opens normally.
-3. Macs with an Intel processor: there is no ready-made file yet. Please [run from source](#run-from-source-windows-macos-linux).
+A ready-made app is available on the [Releases](https://github.com/LordMRM/chat-exporter-prg/releases) page.
+It works on Macs with an Apple chip (M1, M2, M3, M4...). On an older Intel Mac, please run the program from source instead (see below).
+
+1. Download `chat-exporter-prg-mac-arm64.zip` and double-click it to unzip.
+2. Move `chat-exporter-prg.app` to your Applications folder (optional).
+3. Try to open it. macOS will show a warning like *"Apple could not verify ... is free of malware"*. Click **Done**.
+4. Open **System Settings → Privacy & Security**, scroll to the bottom, and click **Open Anyway** next to the app name. Enter your Mac password and confirm.
+5. From now on the app opens normally.
+
+**Why does this warning appear?**
+The app is not signed with a paid Apple Developer certificate, so macOS cannot verify it. The source code is fully open on GitHub, and the app never sends your chats anywhere.
+
+**Terminal alternative:**
+
+```bash
+xattr -cr /path/to/chat-exporter-prg.app
+```
+
+This removes the "downloaded from the internet" flag, and the app will open without the warning.
+
+> Note: on recent macOS versions (Sequoia and later), right-click → Open no longer bypasses this warning. Use the steps above.
 
 **Linux**
 
