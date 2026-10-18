@@ -1,4 +1,6 @@
 # chat-exporter-prg
+<img src="src/chat_exporter/assets/icon-256.png" width="128" alt="chat-exporter-prg icon">
+
 
 Export your AI chats (**ChatGPT**, **Claude**, **Gemini**) to clean **PDF** or **Word (DOCX)** files, including very long chats, code blocks, tables, and Persian / English / mixed text.
 
@@ -21,16 +23,29 @@ Export your AI chats (**ChatGPT**, **Claude**, **Gemini**) to clean **PDF** or *
 | System | Browser needed |
 |---|---|
 | Windows | Google Chrome or Microsoft Edge |
-| macOS | Google Chrome or Microsoft Edge (**not tested yet**) |
+| macOS | Google Chrome or Microsoft Edge |
 | Linux | Google Chrome or Chromium (Edge is not supported on Linux) |
 
 Firefox and Safari are not supported yet. PDF export needs Chrome or Edge even if you only want to read the chat from another browser.
 
-## Quick start (Windows)
+## Quick start (ready-made programs)
 
-1. Download `chat-exporter-prg.exe` from the [Releases](https://github.com/LordMRM/chat-exporter-prg/releases) page.
-2. Double-click it. Windows may show a "Windows protected your PC" warning because the program is not code-signed. Click **More info**, then **Run anyway**.
-3. Follow the steps in [How to use](#how-to-use).
+Download the file for your system from the [Releases](https://github.com/LordMRM/chat-exporter-prg/releases) page, then follow the steps in [How to use](#how-to-use).
+
+**Windows** (`chat-exporter-prg.exe`)
+
+1. Double-click the file.
+2. Windows may show "Windows protected your PC" because the program is not code-signed. Click **More info**, then **Run anyway**.
+
+**macOS** (`chat-exporter-prg-mac.zip`, Apple Silicon only: M1, M2, M3, M4...)
+
+1. Unzip the file and move `chat-exporter-prg.app` wherever you like (for example the Applications folder).
+2. The first time, macOS may say the app cannot be opened because the developer cannot be verified (the program is not signed by Apple). **Right-click the app, choose Open, then click Open again.** After that it opens normally.
+3. Macs with an Intel processor: there is no ready-made file yet. Please [run from source](#run-from-source-windows-macos-linux).
+
+**Linux**
+
+There is no ready-made file yet. Please [run from source](#run-from-source-windows-macos-linux).
 
 ## Run from source (Windows, macOS, Linux)
 
@@ -114,7 +129,8 @@ Delete that folder to forget all logins made through this program.
 Install PyInstaller (`pip install pyinstaller`) in the virtual environment, then:
 
 - Windows: `.\scripts\build_windows.ps1` creates `dist\chat-exporter-prg.exe`
-- macOS and Linux: build scripts will be added after testing on those systems
+- macOS: `bash scripts/build_macos.sh` creates `dist/chat-exporter-prg.app` for the processor type of the Mac you build on
+- Linux: no build script yet (run from source)
 
 ## Project layout
 
@@ -134,7 +150,7 @@ Each website has its own adapter, so when a site changes, only that one file nee
 
 ## Roadmap
 
-- macOS testing and packaging
+- Ready-made files for Intel Macs and Linux (automatic builds with GitHub Actions)
 - Firefox support
 - Persian user interface
 - App icon

@@ -3,7 +3,9 @@
 Part 1: layout and choices only. The Export button is connected to the
 real export job in the next step.
 """
+import ctypes  # lets us call a Windows system function
 import queue  # a thread-safe mailbox between the worker and the window
+import sys  # tells us which operating system we run on
 import threading  # runs the export in the background
 from pathlib import Path
 import tkinter as tk  # the window toolkit that ships with Python
@@ -56,6 +58,25 @@ HINT_COLOR = "#ffe600"   # slightly dimmer yellow, for secondary texts
 BUTTON_BG = "#2b2b4a"    # button background (a bit lighter than the window)
 BUTTON_ACTIVE = "#3a3a66"  # button color while the mouse is over it
 
+# Folder with the icon files. Path(__file__) works both when running from
+# source and inside the packaged program (the same trick we use for fonts).
+ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+
+def set_windows_app_id() -> None:
+    """Give the program its own identity on the Windows taskbar.
+
+    Without this, Windows groups the window under python.exe and shows
+    the Python logo instead of our icon (when running from source).
+    """
+    if not sys.platform.startswith("win"):
+        return  # only Windows needs this
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            "chat-exporter-prg.app"
+        )
+    except Exception:
+        pass  # never stop the program because of a cosmetic detail
+
 class App(tk.Tk):
     """The main window. Inherits from tk.Tk, which is the window itself."""
 
@@ -64,6 +85,7 @@ class App(tk.Tk):
         self.title("Chat Exporter")
         # No fixed height: the window grows to fit all its content
         # (including the hint text and the buttons that appear later).
+        self._set_window_icon()
         self.minsize(520, 640)
         self.resizable(True, True)
 
@@ -91,6 +113,24 @@ class App(tk.Tk):
         self._fit_window()
 
     # ---------- building the layout ----------
+
+    def _set_window_icon(self) -> None:
+        """Replace the default Tk feather icon on the window and taskbar."""
+        try:
+            if sys.platform.startswith("win"):
+                # Windows uses the .ico file (title bar and taskbar).
+                self.iconbitmap(default=str(ASSETS_DIR / "icon.ico"))
+            else:
+                # macOS / Linux use a PNG image.
+                image = tk.PhotoImage(file=str(ASSETS_DIR / "icon.png"))
+                # The PNG is 1024 px wide; shrink it to about 256 px.
+                factor = max(1, image.width() // 256)
+                if factor > 1:
+                    image = image.subsample(factor)
+                self.iconphoto(True, image)
+                self._icon_image = image  # keep a reference or Tk drops it
+        except tk.TclError:
+            pass  # a missing or unreadable icon must never stop the program
 
     def _apply_theme(self) -> None:
         """Set colors for all ttk widgets."""
@@ -293,6 +333,8 @@ class App(tk.Tk):
             f"{max(needed_height, self.winfo_height())}"
         )
 
+
 def run_gui() -> None:
     """Create the window and keep it open until the user closes it."""
+    set_windows_app_id()
     App().mainloop()

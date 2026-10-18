@@ -8,6 +8,7 @@ pyinstaller --noconfirm --onefile --windowed --name chat-exporter-prg `
   --paths src `
   --add-data "src\chat_exporter\assets;chat_exporter\assets" `
   --collect-all playwright `
+  --icon "src\chat_exporter\assets\icon.ico" `
   run_app.py
 
 Write-Host "Done: dist\chat-exporter-prg.exe"
