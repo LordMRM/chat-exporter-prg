@@ -4,8 +4,6 @@
 
 <h1 align="center">chat-exporter-prg</h1>
 
-<img src="src/chat_exporter/assets/icon-256.png" width="128" alt="chat-exporter-prg icon">
-
 
 Export your AI chats (**ChatGPT**, **Claude**, **Gemini**) to clean **PDF** or **Word (DOCX)** files, including very long chats, code blocks, tables, and Persian / English / mixed text.
 
