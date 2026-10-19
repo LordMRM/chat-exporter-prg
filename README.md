@@ -2,6 +2,7 @@
   <img src="src/chat_exporter/assets/icon.png" alt="Chat Exporter icon" width="128">
 </p>
 
+<p align="center"><a href="README.fa.md">راهنمای فارسی</a> | <a href="#">English</a></p>
 <h1 align="center">chat-exporter-prg</h1>
 
 
@@ -29,7 +30,7 @@ Export your AI chats (**ChatGPT**, **Claude**, **Gemini**) to clean **PDF** or *
 | macOS | Google Chrome or Microsoft Edge |
 | Linux | Google Chrome or Chromium (Edge is not supported on Linux) |
 
-Firefox and Safari are not supported yet. PDF export needs Chrome or Edge even if you only want to read the chat from another browser.
+Firefox and Safari are not supported. PDF export needs Chrome or Edge even if you only want to read the chat from another browser.
 
 ## Quick start (ready-made programs)
 
