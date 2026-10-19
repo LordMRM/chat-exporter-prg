@@ -15,7 +15,7 @@ from chat_exporter.browsers.chromium import BrowserSession
 from chat_exporter.exporters.docx_export import export_docx
 from chat_exporter.exporters.pdf import export_pdf
 from chat_exporter.paths import build_output_path
-from chat_exporter.settings import BrowserChoice, OutputFormat, Service, Settings
+from chat_exporter.settings import OutputFormat, Service, Settings
 
 # Start page of every supported service.
 SERVICE_URLS = {
@@ -41,8 +41,7 @@ def run_export(
     # Fail early, with a clear message, for things we have not built yet.
     if settings.service not in SERVICE_URLS:
         raise NotImplementedError(f"{settings.service.name.title()} is not supported yet.")
-    if settings.browser == BrowserChoice.FIREFOX:
-        raise NotImplementedError("Firefox is not supported yet.")
+
 
     progress("Opening the browser...")
     with BrowserSession(settings.browser.value) as page:

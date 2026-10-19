@@ -180,7 +180,6 @@ Each website has its own adapter, so when a site changes, only that one file nee
 ## Roadmap
 
 - Ready-made files for Intel Macs and Linux (automatic builds with GitHub Actions)
-- Firefox support
 - Persian user interface
 - App icon
 

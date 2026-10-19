@@ -40,10 +40,7 @@ BROWSER_HINTS = {
         "Opens a separate Edge window for this program.\n"
         "Log in to your AI service there once; it will be remembered."
     ),
-    BrowserChoice.FIREFOX: (
-        "Opens a Firefox window for this program (not ready yet).\n"
-        "Your login stays inside Firefox on this computer only."
-    ),
+
 }
 
 # Labels shown to the user for each language option.

@@ -23,7 +23,7 @@ class BrowserChoice(Enum):
 
     CHROME = "chrome"
     EDGE = "edge"
-    FIREFOX = "firefox"
+
 
 
 class OutputFormat(Enum):
