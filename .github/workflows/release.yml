@@ -1,0 +1,89 @@
+name: Build release
+
+on:
+  push:
+    tags: ["v*"]          # runs when you push a tag like v1.0.1
+  workflow_dispatch:       # lets you start it by hand to test
+
+permissions:
+  contents: write          # needed to attach files to a Release
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false     # one failing system does not cancel the others
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+            asset: chat-exporter-prg-windows.exe
+          - os: macos-latest          # Apple Silicon (arm64)
+            name: mac-arm64
+            asset: chat-exporter-prg-mac-arm64.zip
+          - os: macos-15-intel        # Intel Mac
+            name: mac-intel
+            asset: chat-exporter-prg-mac-intel.zip
+          - os: ubuntu-22.04          # older Ubuntu = works on more Linux systems
+            name: linux
+            asset: chat-exporter-prg-linux.tar.gz
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Tk (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\scripts\build_windows.ps1
+          Copy-Item dist\chat-exporter-prg.exe ${{ matrix.asset }}
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          bash scripts/build_macos.sh
+          ditto -c -k --keepParent dist/chat-exporter-prg.app ${{ matrix.asset }}
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          bash scripts/build_linux.sh
+          chmod +x dist/chat-exporter-prg
+          tar -czf ${{ matrix.asset }} -C dist chat-exporter-prg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.name }}
+          path: ${{ matrix.asset }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')   # only attach to a Release for tags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          merge-multiple: true
+          path: release-files
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          generate_release_notes: true
