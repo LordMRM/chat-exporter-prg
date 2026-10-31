@@ -19,6 +19,19 @@ from docx.oxml.ns import qn  # builds proper XML names like "w:bidi"
 from chat_exporter.exporters.html_builder import role_label  # reuse "You" / "AI"
 from chat_exporter.models import Chat, ChatLanguage, parse_table  # our shared structures
 
+import re
+
+# Characters that are not allowed in XML (and therefore not in a .docx file):
+# control characters (except tab, newline, carriage return) and broken surrogates.
+_ILLEGAL_XML_CHARS = re.compile(
+    "[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]"
+)
+
+
+def clean_xml_text(text: str) -> str:
+    """Remove characters that would make python-docx raise an error."""
+    return _ILLEGAL_XML_CHARS.sub("", text)
+
 FONT_NAME = "Vazirmatn"  # must be installed on the computer that opens the file
 
 def starts_rtl(text: str) -> bool:
@@ -79,7 +92,7 @@ def add_text(document, text: str, rtl: bool, bold: bool = False) -> None:
     """Add one paragraph with the right direction, alignment and font."""
     paragraph = document.add_paragraph()
     set_paragraph_direction(paragraph, rtl)
-    run = paragraph.add_run(text)
+    run = paragraph.add_run(clean_xml_text(text))
     run.bold = bold
     set_run_font(run, rtl)
 
@@ -95,7 +108,7 @@ def add_table(document, rows: list[list[str]], language: ChatLanguage) -> None:
             paragraph = table.cell(row_number, column_number).paragraphs[0]
             rtl = is_rtl(text, language)
             set_paragraph_direction(paragraph, rtl)
-            run = paragraph.add_run(text)
+            run = paragraph.add_run(clean_xml_text(text))
             run.bold = row_number == 0
             set_run_font(run, rtl)
 
